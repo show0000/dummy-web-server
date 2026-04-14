@@ -14,11 +14,11 @@
 
 - [x] `apis.yaml` 파서 구현 (YAML → 라우트 등록)
 - [x] HTTP 라우터 구현 (path variable `{name}` 지원)
-- [ ] Goja 스크립트 엔진 통합
-  - [ ] `req` 컨텍스트 주입 (body, query, params, headers)
-  - [ ] `res` 헬퍼 구현 (json, file, setHeader)
-  - [ ] 스크립트 사전 컴파일 (Fail-Fast)
-  - [ ] Sandboxing (시스템 리소스 접근 차단)
+- [x] Goja 스크립트 엔진 통합
+  - [x] `req` 컨텍스트 주입 (body, query, params, headers)
+  - [x] `res` 헬퍼 구현 (json, file, setHeader)
+  - [x] 스크립트 사전 컴파일 (Fail-Fast)
+  - [x] Sandboxing (시스템 리소스 접근 차단)
 - [ ] 외부 스크립트 파일 로드 (`scriptFile`)
 - [ ] Request Body JSON Schema 검증 (`validation`)
 

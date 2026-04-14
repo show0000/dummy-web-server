@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-04-14 — Goja 스크립트 엔진 통합
+
+- `src/internal/script/context.go`: Request(읽기전용), Response, ResHelper 구조체.
+  - `res.json(status, body)`, `res.file(path)`, `res.setHeader(key, value)` 구현.
+  - `Response.WriteHTTP()`: JSON 응답 직렬화, 파일 응답 시 MIME 추론 + Content-Disposition 헤더.
+- `src/internal/script/engine.go`: Compile(사전 컴파일), Execute(VM 실행) 구현.
+  - Sandboxing: require, process, global, globalThis를 undefined로 차단.
+  - 스크립트가 res.json/res.file 미호출 시 에러 반환.
+- 단위 테스트 15건 (컴파일, req 4종 주입, res 3종, 조건분기, 미응답, 런타임에러, Sandboxing, WriteHTTP).
+- 통합 테스트 53건 전체 통과.
+
+---
+
 ## 2026-04-14 — HTTP 라우터 구현
 
 - `src/internal/router/router.go`: Router 구조체, Handle(), ServeHTTP() 구현.
