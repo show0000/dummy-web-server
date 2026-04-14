@@ -51,7 +51,7 @@ func setupServer(t *testing.T, configYAML, apisYAML string) *httptest.Server {
 }
 
 func TestRunFailsWithMissingConfig(t *testing.T) {
-	err := run("/nonexistent/config.yaml")
+	err := run(cliFlags{configPath: "/nonexistent/config.yaml"})
 	if err == nil {
 		t.Fatal("expected error for missing config")
 	}
@@ -62,7 +62,7 @@ func TestRunFailsWithInvalidConfig(t *testing.T) {
 	writeFile(t, dir, "config.yaml", `server:
   port: 0
 `)
-	err := run(filepath.Join(dir, "config.yaml"))
+	err := run(cliFlags{configPath: filepath.Join(dir, "config.yaml")})
 	if err == nil {
 		t.Fatal("expected error for invalid config")
 	}

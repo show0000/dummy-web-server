@@ -121,10 +121,26 @@ func matchPath(pattern, path string) bool {
 	return true
 }
 
-func run(configPath string) error {
-	cfg, err := config.Load(configPath)
+type cliFlags struct {
+	configPath  string
+	port        int
+	enableLogin string
+}
+
+func run(flags cliFlags) error {
+	cfg, err := config.Load(flags.configPath)
 	if err != nil {
 		return fmt.Errorf("config load failed: %w", err)
+	}
+
+	// CLI flag overrides
+	if flags.port > 0 {
+		cfg.Server.Port = flags.port
+	}
+	if flags.enableLogin == "y" {
+		cfg.JWT.Enabled = true
+	} else if flags.enableLogin == "n" {
+		cfg.JWT.Enabled = false
 	}
 
 	handler, err := buildRouterFromConfig(cfg)
@@ -138,10 +154,13 @@ func run(configPath string) error {
 }
 
 func main() {
-	configPath := flag.String("config", "config.yaml", "path to config.yaml")
+	flags := cliFlags{}
+	flag.StringVar(&flags.configPath, "config", "config.yaml", "path to config.yaml")
+	flag.IntVar(&flags.port, "port", 0, "override server port")
+	flag.StringVar(&flags.enableLogin, "enable-login", "", "enable JWT login (y|n)")
 	flag.Parse()
 
-	if err := run(*configPath); err != nil {
+	if err := run(flags); err != nil {
 		fmt.Fprintf(os.Stderr, "FATAL: %v\n", err)
 		os.Exit(1)
 	}
