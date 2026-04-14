@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 인수인계
+
+처음 이 프로젝트에 투입되었다면 [AGENT.md](./AGENT.md)를 먼저 읽을 것. 소스 구조, 설계 결정, 수정 가이드가 포함되어 있음.
+
 ## 필수 규칙
 
 **작업 완료 시 반드시 `git add` → `git commit` → `git push` 할 것. 커밋 없이 다음 task로 넘어가지 않는다.**
