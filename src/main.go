@@ -12,6 +12,7 @@ import (
 	"dummy-web-server/src/internal/auth"
 	"dummy-web-server/src/internal/config"
 	"dummy-web-server/src/internal/router"
+	"dummy-web-server/src/internal/utils"
 )
 
 func buildRouterFromConfig(cfg *config.Config) (http.Handler, error) {
@@ -23,6 +24,9 @@ func buildRouterFromConfig(cfg *config.Config) (http.Handler, error) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
+
+	// Utility endpoints
+	r.Handle("POST", "/_utils/schema", utils.SchemaHandler())
 
 	// Load and register dynamic APIs
 	registered, err := api.RegisterAPIs(r, cfg.Paths.APIs, cfg.Paths.Storage)

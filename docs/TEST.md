@@ -52,6 +52,13 @@ go test ./... -v
 |--------|--------|------|------|
 | `src` (통합) | FileUpload (multipart 업로드 → 저장 → req.files 검증), FileDownload (실제 파일 → http.ServeFile → 콘텐츠 검증) | 2 | PASS |
 
+### Phase 5: 유틸리티
+
+| 패키지 | 테스트 | 건수 | 결과 |
+|--------|--------|------|------|
+| `src/internal/utils` | GenerateSchemaString, GenerateSchemaInteger, GenerateSchemaFloat, GenerateSchemaBoolean, GenerateSchemaNull, GenerateSchemaObject, GenerateSchemaArray, GenerateSchemaEmptyArray, GenerateSchemaNestedObject, SchemaHandlerValid, SchemaHandlerInvalidJSON | 11 | PASS |
+| `src` (통합) | UtilsSchemaEndpoint | 1 | PASS |
+
 ### Phase 4: JWT 인증
 
 | 패키지 | 테스트 | 건수 | 결과 |
@@ -61,4 +68,4 @@ go test ./... -v
 
 ---
 
-**총 테스트: 81건 / 전체 PASS**
+**총 테스트: 93건 / 전체 PASS**

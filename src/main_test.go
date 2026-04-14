@@ -610,6 +610,44 @@ func TestJWTHealthSkipsAuth(t *testing.T) {
 	}
 }
 
+func TestUtilsSchemaEndpoint(t *testing.T) {
+	srv := setupServer(t,
+		`server:
+  port: 8080`,
+		`apis: []`,
+	)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Post(srv.URL+"/_utils/schema", "application/json",
+		strings.NewReader(`{"name":"Alice","age":30,"tags":["go","mock"]}`))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		t.Errorf("expected 200, got %d", resp.StatusCode)
+	}
+
+	var result map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&result)
+
+	if result["type"] != "object" {
+		t.Errorf("expected type object, got %v", result["type"])
+	}
+
+	props := result["properties"].(map[string]interface{})
+	nameSchema := props["name"].(map[string]interface{})
+	if nameSchema["type"] != "string" {
+		t.Errorf("expected name string, got %v", nameSchema["type"])
+	}
+	tagsSchema := props["tags"].(map[string]interface{})
+	if tagsSchema["type"] != "array" {
+		t.Errorf("expected tags array, got %v", tagsSchema["type"])
+	}
+}
+
 func TestNotFoundRoute(t *testing.T) {
 	srv := setupServer(t,
 		`server:

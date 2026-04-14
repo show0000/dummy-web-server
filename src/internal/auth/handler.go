@@ -83,8 +83,8 @@ func Middleware(svc *JWTService, skipAuth func(method, path string) bool) func(h
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			path := r.URL.Path
 
-			// Skip auth endpoints, explorer, and health check
-			if strings.HasPrefix(path, "/_auth/") || strings.HasPrefix(path, "/_explorer") || path == "/health" {
+			// Skip internal endpoints and health check
+			if strings.HasPrefix(path, "/_auth/") || strings.HasPrefix(path, "/_explorer") || strings.HasPrefix(path, "/_utils/") || path == "/health" {
 				next.ServeHTTP(w, r)
 				return
 			}

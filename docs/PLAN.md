@@ -38,7 +38,7 @@
 
 ## Phase 5: 유틸리티
 
-- [ ] `POST /_utils/schema` — JSON → JSON Schema 생성기
+- [x] `POST /_utils/schema` — JSON → JSON Schema 생성기
 
 ## Phase 6: API Explorer (Built-in Web UI)
 

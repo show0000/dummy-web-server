@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-04-14 — Phase 5: JSON Schema 생성기
+
+- `utils/schema.go`: GenerateSchema 재귀 함수 (object, array, string, integer, number, boolean, null).
+  - Object: properties + required 자동 생성, 키 정렬로 결정적 출력.
+  - Array: 첫 번째 요소로 items 타입 추론.
+  - float64 중 정수값은 integer로 분류.
+- SchemaHandler: POST /_utils/schema 핸들러.
+- JWT 미들웨어에서 /_utils/* 경로 제외 추가.
+- 단위 테스트 11건, 통합 테스트 1건, 전체 93건 통과.
+
+---
+
 ## 2026-04-14 — Phase 4: JWT 인증
 
 - `auth/jwt.go`: JWTService 구현.
