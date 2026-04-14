@@ -158,6 +158,35 @@ func main() {
 	flag.StringVar(&flags.configPath, "config", "config.yaml", "path to config.yaml")
 	flag.IntVar(&flags.port, "port", 0, "override server port")
 	flag.StringVar(&flags.enableLogin, "enable-login", "", "enable JWT login (y|n)")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `dummy-web-server - YAML 기반 동적 Mock API 서버
+
+Usage:
+  dummy-web-server [options]
+
+Options:
+  --config string        config.yaml 경로 (default "config.yaml")
+  --port int             서버 포트 (config.yaml 오버라이드)
+  --enable-login y|n     JWT 로그인 활성화 (config.yaml 오버라이드)
+  --help                 도움말 표시
+
+Examples:
+  dummy-web-server
+  dummy-web-server --port 3000
+  dummy-web-server --port 9090 --enable-login y
+  dummy-web-server --config ./my-config.yaml
+
+Endpoints:
+  /health              서버 상태 확인
+  /_explorer           API Explorer (웹 UI)
+  /_utils/schema       JSON → JSON Schema 변환
+  /_auth/login         JWT 로그인 (--enable-login y 필요)
+  /_auth/logout        JWT 로그아웃
+  /_auth/refresh       Refresh Token 갱신
+`)
+	}
+
 	flag.Parse()
 
 	if err := run(flags); err != nil {
