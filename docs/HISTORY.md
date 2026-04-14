@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-04-14 — Phase 3: 파일 업로드/다운로드
+
+- `script/context.go`: `FileInfo` 구조체 추가 (fieldName, fileName, size, savedPath).
+- `script/engine.go`: `req.files` 배열을 Goja VM에 주입.
+- `api/handler.go`: multipart/form-data 파싱 추가.
+  - 업로드 파일은 storagePath에 자동 저장, 메타데이터를 `req.files`로 스크립트에 전달.
+  - form field 값은 `req.body`에 매핑.
+  - `RegisterAPIs`에 storagePath 파라미터 추가.
+- 다운로드: `res.file(path)` → `http.ServeFile`로 실제 파일 스트리밍 동작 확인.
+- 통합 테스트: 실제 multipart 업로드 → 파일 저장 확인, 실제 파일 다운로드 → 콘텐츠 검증.
+- 전체 테스트 68건 통과.
+
+---
+
 ## 2026-04-14 — 요청 파이프라인 완성 (validation + handler + 통합)
 
 - `src/internal/validation/validator.go`: JSON Schema 검증기 구현 (santhosh-tekuri/jsonschema 활용).

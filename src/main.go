@@ -23,7 +23,7 @@ func buildRouterFromConfig(cfg *config.Config) (*router.Router, error) {
 	})
 
 	// Load and register dynamic APIs
-	registered, err := api.RegisterAPIs(r, cfg.Paths.APIs)
+	registered, err := api.RegisterAPIs(r, cfg.Paths.APIs, cfg.Paths.Storage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register APIs: %w", err)
 	}

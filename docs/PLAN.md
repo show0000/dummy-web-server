@@ -24,8 +24,8 @@
 
 ## Phase 3: 파일 처리
 
-- [ ] 파일 업로드 (POST, multipart/form-data)
-- [ ] 파일 다운로드 (`res.file(path)`, MIME 자동 추론)
+- [x] 파일 업로드 (POST, multipart/form-data)
+- [x] 파일 다운로드 (`res.file(path)`, MIME 자동 추론)
 
 ## Phase 4: JWT 인증
 

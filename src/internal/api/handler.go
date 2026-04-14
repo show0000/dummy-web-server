@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -20,7 +22,7 @@ type RegisteredAPI struct {
 }
 
 // RegisterAPIs loads apis.yaml, compiles all scripts (Fail-Fast), and registers routes.
-func RegisterAPIs(r *router.Router, apisPath string) ([]RegisteredAPI, error) {
+func RegisterAPIs(r *router.Router, apisPath, storagePath string) ([]RegisteredAPI, error) {
 	apis, err := LoadAPIs(apisPath)
 	if err != nil {
 		return nil, err
@@ -43,18 +45,58 @@ func RegisterAPIs(r *router.Router, apisPath string) ([]RegisteredAPI, error) {
 		reg := RegisteredAPI{Definition: apiDef, Compiled: compiled}
 		registered = append(registered, reg)
 
-		handler := makeHandler(reg)
+		handler := makeHandler(reg, storagePath)
 		r.Handle(apiDef.Method, apiDef.Entrypoint, handler)
 	}
 
 	return registered, nil
 }
 
-func makeHandler(reg RegisteredAPI) http.HandlerFunc {
+func makeHandler(reg RegisteredAPI, storagePath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Parse request body
 		var body interface{}
-		if r.Body != nil && r.ContentLength != 0 {
+		var files []script.FileInfo
+
+		ct := r.Header.Get("Content-Type")
+		isMultipart := strings.HasPrefix(ct, "multipart/form-data")
+
+		if isMultipart {
+			// Parse multipart form (max 32MB)
+			if err := r.ParseMultipartForm(32 << 20); err != nil {
+				writeError(w, http.StatusBadRequest, "failed to parse multipart form")
+				return
+			}
+
+			// Save uploaded files
+			for fieldName, fileHeaders := range r.MultipartForm.File {
+				for _, fh := range fileHeaders {
+					savedPath, err := saveUploadedFile(fh, storagePath)
+					if err != nil {
+						writeError(w, http.StatusInternalServerError, fmt.Sprintf("failed to save file: %v", err))
+						return
+					}
+					files = append(files, script.FileInfo{
+						FieldName: fieldName,
+						FileName:  fh.Filename,
+						Size:      fh.Size,
+						SavedPath: savedPath,
+					})
+				}
+			}
+
+			// Parse form fields as body
+			formData := make(map[string]interface{})
+			for k, v := range r.MultipartForm.Value {
+				if len(v) == 1 {
+					formData[k] = v[0]
+				} else {
+					formData[k] = v
+				}
+			}
+			if len(formData) > 0 {
+				body = formData
+			}
+		} else if r.Body != nil && r.ContentLength != 0 {
 			data, err := io.ReadAll(r.Body)
 			if err != nil {
 				writeError(w, http.StatusBadRequest, "failed to read request body")
@@ -100,6 +142,7 @@ func makeHandler(reg RegisteredAPI) http.HandlerFunc {
 			Query:   query,
 			Params:  params,
 			Headers: headers,
+			Files:   files,
 		}
 
 		// Execute script
@@ -111,7 +154,6 @@ func makeHandler(reg RegisteredAPI) http.HandlerFunc {
 
 		// Write response
 		if resp.FilePath != "" {
-			// Set custom headers before serving file
 			for k, v := range resp.Headers {
 				w.Header().Set(k, v)
 			}
@@ -123,6 +165,31 @@ func makeHandler(reg RegisteredAPI) http.HandlerFunc {
 			writeError(w, http.StatusInternalServerError, "failed to write response")
 		}
 	}
+}
+
+func saveUploadedFile(fh *multipart.FileHeader, storagePath string) (string, error) {
+	src, err := fh.Open()
+	if err != nil {
+		return "", err
+	}
+	defer src.Close()
+
+	if err := os.MkdirAll(storagePath, 0755); err != nil {
+		return "", err
+	}
+
+	destPath := filepath.Join(storagePath, fh.Filename)
+	dst, err := os.Create(destPath)
+	if err != nil {
+		return "", err
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, src); err != nil {
+		return "", err
+	}
+
+	return destPath, nil
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {

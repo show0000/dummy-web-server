@@ -9,12 +9,21 @@ import (
 	"strings"
 )
 
+// FileInfo holds metadata about an uploaded file.
+type FileInfo struct {
+	FieldName string `json:"fieldName"`
+	FileName  string `json:"fileName"`
+	Size      int64  `json:"size"`
+	SavedPath string `json:"savedPath"`
+}
+
 // Request is the read-only req object injected into scripts.
 type Request struct {
 	Body    interface{}       `json:"body"`
 	Query   map[string]string `json:"query"`
 	Params  map[string]string `json:"params"`
 	Headers map[string]string `json:"headers"`
+	Files   []FileInfo        `json:"files"`
 }
 
 // Response collects the script's response intent.

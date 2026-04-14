@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -34,8 +37,9 @@ func setupServer(t *testing.T, configYAML, apisYAML string) *httptest.Server {
 	if err != nil {
 		t.Fatalf("failed to load config: %v", err)
 	}
-	// Override apis path to temp dir
+	// Override paths to temp dir
 	cfg.Paths.APIs = filepath.Join(dir, "apis.yaml")
+	cfg.Paths.Storage = filepath.Join(dir, "storage")
 
 	r, err := buildRouterFromConfig(cfg)
 	if err != nil {
@@ -313,6 +317,107 @@ paths:
 	body, _ := io.ReadAll(resp.Body)
 	if !strings.Contains(string(body), `"external"`) {
 		t.Errorf("unexpected body: %s", body)
+	}
+}
+
+func TestFileUpload(t *testing.T) {
+	srv := setupServer(t,
+		`server:
+  port: 8080`,
+		`apis:
+  - entrypoint: /api/upload
+    method: POST
+    script: |
+      if (req.files.length === 0) {
+        res.json(400, {error: "no files"});
+      } else {
+        res.json(200, {
+          fileName: req.files[0].fileName,
+          size: req.files[0].size,
+          savedPath: req.files[0].savedPath
+        });
+      }
+`,
+	)
+	defer srv.Close()
+
+	// Create multipart body
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+	part, err := writer.CreateFormFile("file", "test.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	part.Write([]byte("hello file content"))
+	writer.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Post(srv.URL+"/api/upload", writer.FormDataContentType(), &buf)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, body)
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	if !strings.Contains(string(body), `"test.txt"`) {
+		t.Errorf("expected fileName test.txt in body: %s", body)
+	}
+}
+
+func TestFileDownload(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create a file to download
+	storageDir := filepath.Join(dir, "storage")
+	os.MkdirAll(storageDir, 0755)
+	writeFile(t, storageDir, "hello.txt", "hello world content")
+
+	writeFile(t, dir, "config.yaml", `server:
+  port: 8080
+`)
+	writeFile(t, dir, "apis.yaml", fmt.Sprintf(`apis:
+  - entrypoint: /api/download/{fileName}
+    method: GET
+    script: |
+      var filePath = "%s/" + req.params.fileName;
+      res.file(filePath);
+`, strings.ReplaceAll(storageDir, `\`, `\\`)))
+
+	cfgPath := filepath.Join(dir, "config.yaml")
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+	cfg.Paths.APIs = filepath.Join(dir, "apis.yaml")
+	cfg.Paths.Storage = storageDir
+
+	r, err := buildRouterFromConfig(cfg)
+	if err != nil {
+		t.Fatalf("failed to build router: %v", err)
+	}
+
+	srvr := httptest.NewServer(r)
+	defer srvr.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get(srvr.URL + "/api/download/hello.txt")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		t.Errorf("expected 200, got %d", resp.StatusCode)
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	if string(body) != "hello world content" {
+		t.Errorf("expected 'hello world content', got '%s'", body)
 	}
 }
 

@@ -31,11 +31,21 @@ func Execute(compiled *CompiledScript, req *Request) (*Response, error) {
 	}
 
 	// Inject req (read-only object)
+	files := make([]interface{}, len(req.Files))
+	for i, f := range req.Files {
+		files[i] = map[string]interface{}{
+			"fieldName": f.FieldName,
+			"fileName":  f.FileName,
+			"size":      f.Size,
+			"savedPath": f.SavedPath,
+		}
+	}
 	vm.Set("req", map[string]interface{}{
 		"body":    req.Body,
 		"query":   req.Query,
 		"params":  req.Params,
 		"headers": req.Headers,
+		"files":   files,
 	})
 
 	// Inject res helper
