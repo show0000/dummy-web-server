@@ -10,3 +10,16 @@ apis:
     description: 요청 바디를 그대로 반환
     script: |
       res.json(200, { received: req.body });
+
+  - entrypoint: /api/files/download/{fileName}
+    method: GET
+    description: 파일 다운로드
+    auth: false
+    script: |
+      var fileName = req.params.fileName;
+
+      if (fileName.includes("..") || fileName.includes("/")) {
+        res.json(400, { error: "잘못된 파일명입니다" });
+      } else {
+        res.file("./storage/" + fileName);
+      }

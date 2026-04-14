@@ -181,7 +181,38 @@ async function showResponse(resp) {
     resp.headers.forEach((v, k) => headerLines.push(`${k}: ${v}`));
     document.getElementById('resp-headers').textContent = headerLines.join('\n');
 
-    // Body
+    // Detect file download (Content-Disposition: attachment)
+    const disposition = resp.headers.get('Content-Disposition') || '';
+    const isAttachment = disposition.toLowerCase().includes('attachment');
+    const contentType = resp.headers.get('Content-Type') || '';
+    const isBinary = !contentType.startsWith('text/')
+        && !contentType.includes('json')
+        && !contentType.includes('xml')
+        && !contentType.includes('javascript')
+        && contentType !== '';
+
+    if (isAttachment || isBinary) {
+        // Extract filename from Content-Disposition
+        let filename = 'download';
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        if (match) filename = match[1];
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        document.getElementById('resp-body').textContent =
+            `(binary data — ${blob.size.toLocaleString()} bytes downloaded as "${filename}")`;
+        return;
+    }
+
+    // Text/JSON response
     const text = await resp.text();
     try {
         const json = JSON.parse(text);
