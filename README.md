@@ -223,19 +223,43 @@ curl -X POST http://localhost:8080/_utils/schema \
 JWT를 활성화하면(`--enable-login y` 또는 `config.yaml`에서 `jwt.enabled: true`) 인증 엔드포인트가 활성화됩니다.
 
 **로그인:**
+
+Request:
+```http
+POST /_auth/login
+Content-Type: application/json
+
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+Response (200 OK):
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+Error (400 Bad Request):
+```json
+{ "error": "username and password are required" }
+```
+
 ```bash
 curl -X POST http://localhost:8080/_auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "testuser", "password": "testpass"}'
 ```
 
-응답:
-```json
-{
-  "accessToken": "eyJhbG...",
-  "refreshToken": "eyJhbG..."
-}
-```
+**동작 상세:**
+- Mock 서버 특성상 **모든 non-empty username/password 조합이 허용**됩니다 (실제 인증 검증 없음).
+- 토큰의 `sub` claim에 username이 저장됩니다.
+- Access Token 만료: 기본 15분 (`jwt.accessTokenExpiry`로 조정).
+- Refresh Token 만료: 기본 168시간/7일 (`jwt.refreshTokenExpiry`로 조정).
+- 토큰 저장소는 in-memory. 서버 재시작 시 모든 세션 초기화.
 
 **인증이 필요한 API 호출:**
 ```bash
