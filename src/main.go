@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"dummy-web-server/internal/config"
+	"dummy-web-server/src/internal/config"
 )
 
 func run(configPath string) error {

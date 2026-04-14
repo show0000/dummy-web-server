@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-04-14 — 디렉토리 구조 정리
+
+- 소스 파일 → `./src/` (main.go, internal/, explorer/)
+- 문서 파일 → `./docs/` (CONTEXT, ARCHITECTURE, PLAN, HISTORY, INSTALL)
+- 루트 유지: CLAUDE.md, README.md, go.mod, go.sum, config.yaml
+- `test.md` 삭제.
+- import 경로 `dummy-web-server/internal/` → `dummy-web-server/src/internal/` 변경.
+- CLAUDE.md, ARCHITECTURE.md 경로 참조 업데이트.
+- `go test ./... -v` 전체 13건 통과 확인.
+
+---
+
 ## 2026-04-14 — main.go 엔트리포인트 구현
 
 - `main.go`: `run(configPath)` 함수로 서버 로직 분리. config 로드 실패 시 FATAL 출력 후 즉시 종료 (Fail-Fast).
