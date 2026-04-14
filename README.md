@@ -14,8 +14,18 @@ go build -o dummy-web-server ./src
 
 크로스 컴파일:
 ```bash
-GOOS=linux GOARCH=amd64 go build -o dummy-web-server ./src
-GOOS=windows GOARCH=amd64 go build -o dummy-web-server.exe ./src
+# Linux
+GOOS=linux   GOARCH=amd64 go build -o dummy-web-server         ./src
+GOOS=linux   GOARCH=arm64 go build -o dummy-web-server-arm64   ./src
+
+# Windows
+GOOS=windows GOARCH=amd64 go build -o dummy-web-server.exe     ./src
+GOOS=windows GOARCH=386   go build -o dummy-web-server-x86.exe ./src
+GOOS=windows GOARCH=arm64 go build -o dummy-web-server-arm64.exe ./src
+
+# macOS
+GOOS=darwin  GOARCH=amd64 go build -o dummy-web-server-intel   ./src
+GOOS=darwin  GOARCH=arm64 go build -o dummy-web-server-arm64   ./src
 ```
 
 ## 실행
