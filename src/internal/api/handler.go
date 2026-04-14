@@ -157,6 +157,13 @@ func makeHandler(reg RegisteredAPI, storagePath string) http.HandlerFunc {
 			for k, v := range resp.Headers {
 				w.Header().Set(k, v)
 			}
+			// Set Content-Disposition with filename for download
+			if w.Header().Get("Content-Disposition") == "" {
+				filename := filepath.Base(resp.FilePath)
+				w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+			}
+			// Expose Content-Disposition to browsers (needed for fetch() access)
+			w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
 			http.ServeFile(w, r, resp.FilePath)
 			return
 		}
