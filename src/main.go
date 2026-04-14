@@ -46,9 +46,11 @@ func buildRouterFromConfig(cfg *config.Config) (http.Handler, error) {
 			Auth:        reg.Definition.AuthEnabled(),
 		}
 	}
-	explorerHandler := explorer.Handler(apiInfos)
+	explorerCfg := explorer.ExplorerConfig{JWTEnabled: cfg.JWT.Enabled}
+	explorerHandler := explorer.Handler(apiInfos, explorerCfg)
 	r.Handle("GET", "/_explorer", explorerHandler)
 	r.Handle("GET", "/_explorer/apis", explorerHandler)
+	r.Handle("GET", "/_explorer/config", explorerHandler)
 	r.Handle("GET", "/_explorer/style.css", explorerHandler)
 	r.Handle("GET", "/_explorer/app.js", explorerHandler)
 

@@ -2,12 +2,24 @@ let apis = [];
 let selectedAPI = null;
 let accessToken = '';
 let refreshToken = '';
+let jwtEnabled = false;
 
 // --- Init ---
 async function init() {
     try {
-        const resp = await fetch('/_explorer/apis');
-        apis = await resp.json();
+        const [apisResp, cfgResp] = await Promise.all([
+            fetch('/_explorer/apis'),
+            fetch('/_explorer/config')
+        ]);
+        apis = await apisResp.json();
+        const cfg = await cfgResp.json();
+        jwtEnabled = cfg.jwtEnabled;
+
+        // Hide auth section if JWT is disabled
+        if (!jwtEnabled) {
+            document.getElementById('auth-section').classList.add('hidden');
+        }
+
         renderAPIList();
     } catch (e) {
         document.getElementById('endpoints').textContent = 'Failed to load APIs.';

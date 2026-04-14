@@ -1,0 +1,12 @@
+apis:
+  - entrypoint: /api/hello/{name}
+    method: GET
+    description: 인사 API
+    script: |
+      res.json(200, { message: "Hello, " + req.params.name + "!" });
+
+  - entrypoint: /api/echo
+    method: POST
+    description: 요청 바디를 그대로 반환
+    script: |
+      res.json(200, { received: req.body });
