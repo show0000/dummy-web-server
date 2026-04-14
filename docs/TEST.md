@@ -52,6 +52,12 @@ go test ./... -v
 |--------|--------|------|------|
 | `src` (통합) | FileUpload (multipart 업로드 → 저장 → req.files 검증), FileDownload (실제 파일 → http.ServeFile → 콘텐츠 검증) | 2 | PASS |
 
+### Phase 6: API Explorer
+
+| 패키지 | 테스트 | 건수 | 결과 |
+|--------|--------|------|------|
+| `src` (통합) | ExplorerPage (HTML 렌더링), ExplorerAPIs (JSON 목록), ExplorerStaticAssets (CSS/JS 서빙) | 3 | PASS |
+
 ### Phase 5: 유틸리티
 
 | 패키지 | 테스트 | 건수 | 결과 |
@@ -68,4 +74,4 @@ go test ./... -v
 
 ---
 
-**총 테스트: 93건 / 전체 PASS**
+**총 테스트: 96건 / 전체 PASS**

@@ -42,12 +42,12 @@
 
 ## Phase 6: API Explorer (Built-in Web UI)
 
-- [ ] 내장 HTML/CSS/JS 작성 (`go:embed`)
-- [ ] `GET /_explorer` — API 목록 표시
-- [ ] 테스트 콘솔 (params, body, headers 입력 → 요청 실행)
-- [ ] 응답 뷰어 (status, headers, body 포맷팅)
-- [ ] cURL 명령어 생성 및 클립보드 복사
-- [ ] JWT 인증 연동 (토큰 자동 주입)
+- [x] 내장 HTML/CSS/JS 작성 (`go:embed`)
+- [x] `GET /_explorer` — API 목록 표시
+- [x] 테스트 콘솔 (params, body, headers 입력 → 요청 실행)
+- [x] 응답 뷰어 (status, headers, body 포맷팅)
+- [x] cURL 명령어 생성 및 클립보드 복사
+- [x] JWT 인증 연동 (토큰 자동 주입)
 
 ## Phase 7: 마무리
 

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"dummy-web-server/src/explorer"
 	"dummy-web-server/src/internal/api"
 	"dummy-web-server/src/internal/auth"
 	"dummy-web-server/src/internal/config"
@@ -34,6 +35,22 @@ func buildRouterFromConfig(cfg *config.Config) (http.Handler, error) {
 		return nil, fmt.Errorf("failed to register APIs: %w", err)
 	}
 	log.Printf("registered %d API endpoint(s)", len(registered))
+
+	// API Explorer
+	apiInfos := make([]explorer.APIInfo, len(registered))
+	for i, reg := range registered {
+		apiInfos[i] = explorer.APIInfo{
+			Entrypoint:  reg.Definition.Entrypoint,
+			Method:      reg.Definition.Method,
+			Description: reg.Definition.Description,
+			Auth:        reg.Definition.AuthEnabled(),
+		}
+	}
+	explorerHandler := explorer.Handler(apiInfos)
+	r.Handle("GET", "/_explorer", explorerHandler)
+	r.Handle("GET", "/_explorer/apis", explorerHandler)
+	r.Handle("GET", "/_explorer/style.css", explorerHandler)
+	r.Handle("GET", "/_explorer/app.js", explorerHandler)
 
 	// JWT authentication
 	if cfg.JWT.Enabled {

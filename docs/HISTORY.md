@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-04-14 — Phase 6: API Explorer (Built-in Web UI)
+
+- `explorer/embed.go`: `go:embed static/*`로 HTML/CSS/JS 바이너리 내장.
+- `explorer/handler.go`: /_explorer (index.html), /_explorer/apis (JSON), 정적 파일 서빙.
+- `explorer/static/index.html`: 2-패널 레이아웃 (API 목록 + 테스트 콘솔).
+- `explorer/static/style.css`: method 뱃지 색상, 모달, 반응형 레이아웃.
+- `explorer/static/app.js`: 
+  - API 목록 렌더링 (method, path, description, auth 표시).
+  - 테스트 콘솔: path params, query params, headers, body 입력 → fetch → 응답 뷰어.
+  - cURL 명령어 생성 → 클립보드 복사.
+  - JWT 연동: 로그인 모달, 토큰 자동 주입.
+- main.go에서 explorer 라우트 등록 (APIInfo 변환).
+- 통합 테스트 3건 (HTML 페이지, API 목록 JSON, 정적 파일), 전체 96건 통과.
+
+---
+
 ## 2026-04-14 — Phase 5: JSON Schema 생성기
 
 - `utils/schema.go`: GenerateSchema 재귀 함수 (object, array, string, integer, number, boolean, null).

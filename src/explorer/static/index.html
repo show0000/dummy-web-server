@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Explorer - dummy-web-server</title>
+    <link rel="stylesheet" href="/_explorer/style.css">
+</head>
+<body>
+    <header>
+        <h1>API Explorer</h1>
+        <div id="auth-section">
+            <button id="auth-btn" onclick="toggleAuthModal()">Login</button>
+            <span id="auth-status"></span>
+        </div>
+    </header>
+
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>JWT Login</h3>
+            <label>Username <input type="text" id="login-username" value="testuser"></label>
+            <label>Password <input type="password" id="login-password" value="testpass"></label>
+            <div class="modal-actions">
+                <button onclick="doLogin()">Login</button>
+                <button onclick="doLogout()">Logout</button>
+                <button onclick="toggleAuthModal()">Close</button>
+            </div>
+            <div id="auth-error" class="error"></div>
+        </div>
+    </div>
+
+    <main>
+        <div id="api-list">
+            <h2>Endpoints</h2>
+            <div id="endpoints"></div>
+        </div>
+
+        <div id="test-panel" class="hidden">
+            <div id="request-section">
+                <h2 id="panel-title"></h2>
+                <div id="params-section" class="section hidden">
+                    <h3>Path Parameters</h3>
+                    <div id="path-params"></div>
+                </div>
+                <div class="section">
+                    <h3>Query Parameters</h3>
+                    <div id="query-params">
+                        <div class="kv-row">
+                            <input type="text" placeholder="key" class="qk">
+                            <input type="text" placeholder="value" class="qv">
+                        </div>
+                    </div>
+                    <button class="btn-small" onclick="addQueryParam()">+ Add</button>
+                </div>
+                <div class="section">
+                    <h3>Headers</h3>
+                    <div id="custom-headers">
+                        <div class="kv-row">
+                            <input type="text" placeholder="key" class="hk">
+                            <input type="text" placeholder="value" class="hv">
+                        </div>
+                    </div>
+                    <button class="btn-small" onclick="addHeader()">+ Add</button>
+                </div>
+                <div id="body-section" class="section hidden">
+                    <h3>Request Body (JSON)</h3>
+                    <textarea id="request-body" rows="8" placeholder='{"key": "value"}'></textarea>
+                </div>
+                <div class="actions">
+                    <button id="send-btn" onclick="sendRequest()">Send Request</button>
+                    <button id="curl-btn" onclick="copyCurl()">Copy cURL</button>
+                </div>
+            </div>
+
+            <div id="response-section" class="hidden">
+                <h2>Response</h2>
+                <div id="resp-status"></div>
+                <div class="section">
+                    <h3>Headers</h3>
+                    <pre id="resp-headers"></pre>
+                </div>
+                <div class="section">
+                    <h3>Body</h3>
+                    <pre id="resp-body"></pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/_explorer/app.js"></script>
+</body>
+</html>

@@ -648,6 +648,113 @@ func TestUtilsSchemaEndpoint(t *testing.T) {
 	}
 }
 
+func TestExplorerPage(t *testing.T) {
+	srv := setupServer(t,
+		`server:
+  port: 8080`,
+		`apis:
+  - entrypoint: /api/hello
+    method: GET
+    description: Hello API
+    script: |
+      res.json(200, {msg: "hello"});
+`,
+	)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+
+	// GET /_explorer → HTML
+	resp, err := client.Get(srv.URL + "/_explorer")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Errorf("expected 200, got %d", resp.StatusCode)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	if !strings.Contains(string(body), "API Explorer") {
+		t.Error("expected HTML page with 'API Explorer'")
+	}
+}
+
+func TestExplorerAPIs(t *testing.T) {
+	srv := setupServer(t,
+		`server:
+  port: 8080`,
+		`apis:
+  - entrypoint: /api/hello
+    method: GET
+    description: Hello API
+    script: |
+      res.json(200, {msg: "hello"});
+  - entrypoint: /api/data
+    method: POST
+    auth: false
+    script: |
+      res.json(200, {});
+`,
+	)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+
+	// GET /_explorer/apis → JSON list
+	resp, err := client.Get(srv.URL + "/_explorer/apis")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Errorf("expected 200, got %d", resp.StatusCode)
+	}
+
+	var apis []map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&apis)
+
+	if len(apis) != 2 {
+		t.Fatalf("expected 2 APIs, got %d", len(apis))
+	}
+	if apis[0]["entrypoint"] != "/api/hello" {
+		t.Errorf("expected /api/hello, got %v", apis[0]["entrypoint"])
+	}
+	if apis[0]["method"] != "GET" {
+		t.Errorf("expected GET, got %v", apis[0]["method"])
+	}
+	if apis[0]["description"] != "Hello API" {
+		t.Errorf("expected 'Hello API', got %v", apis[0]["description"])
+	}
+	if apis[1]["auth"] != false {
+		t.Errorf("expected auth false for second API")
+	}
+}
+
+func TestExplorerStaticAssets(t *testing.T) {
+	srv := setupServer(t,
+		`server:
+  port: 8080`,
+		`apis: []`,
+	)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+
+	// CSS
+	resp, _ := client.Get(srv.URL + "/_explorer/style.css")
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Errorf("expected 200 for style.css, got %d", resp.StatusCode)
+	}
+
+	// JS
+	resp2, _ := client.Get(srv.URL + "/_explorer/app.js")
+	defer resp2.Body.Close()
+	if resp2.StatusCode != 200 {
+		t.Errorf("expected 200 for app.js, got %d", resp2.StatusCode)
+	}
+}
+
 func TestNotFoundRoute(t *testing.T) {
 	srv := setupServer(t,
 		`server:
