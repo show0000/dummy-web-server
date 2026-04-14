@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 필수 규칙
 
+**작업 완료 시 반드시 `git add` → `git commit` → `git push` 할 것. 커밋 없이 다음 task로 넘어가지 않는다.**
+
 **아래 파일들은 작업 중 항상 최신 상태로 유지할 것. Agent가 작업을 이어받을 때 이 파일들만으로 전체 맥락을 파악할 수 있어야 한다.**
 
 | 파일 | 용도 | 갱신 시점 |
