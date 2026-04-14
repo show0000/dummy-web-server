@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 시스템 구조, 디렉토리, 패키지 의존 관계 | 구조 변경 시 |
 | [PLAN.md](./docs/PLAN.md) | 작업 계획 및 진행 상태 (체크리스트) | 작업 시작/완료 시 |
 | [HISTORY.md](./docs/HISTORY.md) | 작업 이력 (무엇을, 왜, 어떻게) | 매 작업 완료 후 |
+| [TEST.md](./docs/TEST.md) | 테스트 전략, 방식, 결과 기록 | 테스트 추가/변경 시 |
 | [INSTALL.md](./docs/INSTALL.md) | 개발 환경 셋업 가이드 | 의존성 변경 시 |
 
 ## 테스트 규칙
