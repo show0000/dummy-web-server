@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-04-14 — HTTP 라우터 구현
+
+- `src/internal/router/router.go`: Router 구조체, Handle(), ServeHTTP() 구현.
+- path variable `{name}` 매칭: splitPath로 세그먼트 분리 후 패턴 비교.
+- method별 라우트 분리, trailing slash 정규화, 미매칭 시 404 반환.
+- `src/internal/router/middleware.go`: context 기반 path params 전달 (Params 함수).
+- 단위 테스트 10건, 통합 테스트 38건 전체 통과.
+
+---
+
 ## 2026-04-14 — apis.yaml 파서 구현
 
 - `src/internal/api/loader.go`: APIDefinition, Validation 구조체 정의.
