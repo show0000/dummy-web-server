@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+jwt:
+  enabled: false
+  secret: "change-me-to-a-secure-secret"
+  accessTokenExpiry: "15m"
+  refreshTokenExpiry: "168h"
+
+paths:
+  apis: "./apis.yaml"
+  storage: "./storage"
+  scripts: "./scripts"
