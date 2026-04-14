@@ -14,6 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | 파일 | 용도 | 갱신 시점 |
 |------|------|-----------|
+| [README.md](./README.md) | 사용자 관점의 전체 사용법 | 기능/CLI/엔드포인트 변경 시 |
+| [AGENT.md](./AGENT.md) | AI Agent 인수인계 (소스 구조, 설계 결정, 수정 가이드) | 소스 구조/설계 변경 시 |
 | [CONTEXT.md](./docs/CONTEXT.md) | 프로젝트 스펙, 요구사항 | 스펙 변경 시 |
 | [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | 시스템 구조, 디렉토리, 패키지 의존 관계 | 구조 변경 시 |
 | [PLAN.md](./docs/PLAN.md) | 작업 계획 및 진행 상태 (체크리스트) | 작업 시작/완료 시 |
