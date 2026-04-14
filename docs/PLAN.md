@@ -29,12 +29,12 @@
 
 ## Phase 4: JWT 인증
 
-- [ ] JWT 토큰 발급/검증 로직
-- [ ] `POST /_auth/login` — Access/Refresh Token 발급
-- [ ] `POST /_auth/logout` — 토큰 무효화
-- [ ] `POST /_auth/refresh` — Refresh Token Rotation
-- [ ] 인증 미들웨어 (Bearer Token 검증, `auth: false` 제외)
-- [ ] `config.yaml`로 JWT Enable/Disable 및 만료 시간 설정
+- [x] JWT 토큰 발급/검증 로직
+- [x] `POST /_auth/login` — Access/Refresh Token 발급
+- [x] `POST /_auth/logout` — 토큰 무효화
+- [x] `POST /_auth/refresh` — Refresh Token Rotation
+- [x] 인증 미들웨어 (Bearer Token 검증, `auth: false` 제외)
+- [x] `config.yaml`로 JWT Enable/Disable 및 만료 시간 설정
 
 ## Phase 5: 유틸리티
 

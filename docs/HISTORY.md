@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-04-14 — Phase 4: JWT 인증
+
+- `auth/jwt.go`: JWTService 구현.
+  - GenerateTokenPair (jti로 유일성 보장), ValidateAccessToken, Refresh (Token Rotation), Logout (blacklist).
+  - In-memory 토큰 저장소 (refreshTokens map, blacklist).
+- `auth/handler.go`: /_auth/login, /_auth/logout, /_auth/refresh 핸들러.
+  - Mock 서버 특성상 모든 username/password 조합 허용.
+  - Middleware: Bearer Token 검증, /_auth/*, /_explorer, /health, auth:false 제외.
+- `main.go`: JWT 활성 시 미들웨어 래핑, buildSkipAuthFunc로 auth:false 엔드포인트 매칭 (path variable 포함).
+- 단위 테스트 8건 (발급, 검증, 만료, Rotation, 무효토큰, 로그아웃, 다른 시크릿).
+- 통합 테스트 5건 (로그인→보호API 접근, auth:false 스킵, Refresh Rotation, 로그아웃, /health 스킵).
+- 전체 테스트 81건 통과.
+
+---
+
 ## 2026-04-14 — Phase 3: 파일 업로드/다운로드
 
 - `script/context.go`: `FileInfo` 구조체 추가 (fieldName, fileName, size, savedPath).

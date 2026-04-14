@@ -46,6 +46,13 @@ go test ./... -v
 
 > `src` (통합) 테스트는 `httptest.NewServer`로 실제 TCP 서버를 기동하여 HTTP 클라이언트로 요청/응답을 검증.
 
+### Phase 4: JWT 인증
+
+| 패키지 | 테스트 | 건수 | 결과 |
+|--------|--------|------|------|
+| `src/internal/auth` | GenerateTokenPair, ValidateAccessToken, ValidateInvalidToken, ValidateExpiredToken, RefreshTokenRotation, RefreshInvalidToken, LogoutBlacklistsAccessToken, DifferentSecretsReject | 8 | PASS |
+| `src` (JWT 통합) | JWTLoginAndAccessProtectedAPI, JWTAuthFalseSkipsAuth, JWTRefreshTokenRotation, JWTLogout, JWTHealthSkipsAuth | 5 | PASS |
+
 ---
 
-**총 테스트: 68건 / 전체 PASS**
+**총 테스트: 81건 / 전체 PASS**

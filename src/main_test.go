@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -418,6 +419,194 @@ func TestFileDownload(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	if string(body) != "hello world content" {
 		t.Errorf("expected 'hello world content', got '%s'", body)
+	}
+}
+
+// --- JWT Integration Tests ---
+
+func setupJWTServer(t *testing.T, apisYAML string) *httptest.Server {
+	t.Helper()
+	dir := t.TempDir()
+	writeFile(t, dir, "config.yaml", `
+server:
+  port: 8080
+jwt:
+  enabled: true
+  secret: "integration-test-secret"
+  accessTokenExpiry: "15m"
+  refreshTokenExpiry: "168h"
+`)
+	writeFile(t, dir, "apis.yaml", apisYAML)
+
+	cfgPath := filepath.Join(dir, "config.yaml")
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+	cfg.Paths.APIs = filepath.Join(dir, "apis.yaml")
+	cfg.Paths.Storage = filepath.Join(dir, "storage")
+
+	handler, err := buildRouterFromConfig(cfg)
+	if err != nil {
+		t.Fatalf("failed to build router: %v", err)
+	}
+	return httptest.NewServer(handler)
+}
+
+func jwtLogin(t *testing.T, srvURL string) (accessToken, refreshToken string) {
+	t.Helper()
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Post(srvURL+"/_auth/login", "application/json",
+		strings.NewReader(`{"username":"testuser","password":"testpass"}`))
+	if err != nil {
+		t.Fatalf("login request failed: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("login failed with %d: %s", resp.StatusCode, body)
+	}
+	var result map[string]string
+	json.NewDecoder(resp.Body).Decode(&result)
+	return result["accessToken"], result["refreshToken"]
+}
+
+func TestJWTLoginAndAccessProtectedAPI(t *testing.T) {
+	srv := setupJWTServer(t, `apis:
+  - entrypoint: /api/secret
+    method: GET
+    script: |
+      res.json(200, {data: "protected"});
+`)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+
+	// Without token → 401
+	resp, _ := client.Get(srv.URL + "/api/secret")
+	resp.Body.Close()
+	if resp.StatusCode != 401 {
+		t.Errorf("expected 401 without token, got %d", resp.StatusCode)
+	}
+
+	// Login
+	accessToken, _ := jwtLogin(t, srv.URL)
+
+	// With token → 200
+	req, _ := http.NewRequest("GET", srv.URL+"/api/secret", nil)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	resp2, _ := client.Do(req)
+	defer resp2.Body.Close()
+	if resp2.StatusCode != 200 {
+		t.Errorf("expected 200 with token, got %d", resp2.StatusCode)
+	}
+	body, _ := io.ReadAll(resp2.Body)
+	if !strings.Contains(string(body), `"protected"`) {
+		t.Errorf("unexpected body: %s", body)
+	}
+}
+
+func TestJWTAuthFalseSkipsAuth(t *testing.T) {
+	srv := setupJWTServer(t, `apis:
+  - entrypoint: /api/public
+    method: GET
+    auth: false
+    script: |
+      res.json(200, {data: "public"});
+  - entrypoint: /api/private
+    method: GET
+    script: |
+      res.json(200, {data: "private"});
+`)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+
+	// Public API without token → 200
+	resp, _ := client.Get(srv.URL + "/api/public")
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Errorf("expected 200 for auth:false API, got %d", resp.StatusCode)
+	}
+
+	// Private API without token → 401
+	resp2, _ := client.Get(srv.URL + "/api/private")
+	resp2.Body.Close()
+	if resp2.StatusCode != 401 {
+		t.Errorf("expected 401 for protected API, got %d", resp2.StatusCode)
+	}
+}
+
+func TestJWTRefreshTokenRotation(t *testing.T) {
+	srv := setupJWTServer(t, `apis: []`)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	_, refreshToken := jwtLogin(t, srv.URL)
+
+	// Refresh → new tokens
+	resp, _ := client.Post(srv.URL+"/_auth/refresh", "application/json",
+		strings.NewReader(fmt.Sprintf(`{"refreshToken":"%s"}`, refreshToken)))
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected 200 on refresh, got %d: %s", resp.StatusCode, body)
+	}
+
+	// Old refresh token should be rejected (rotation)
+	resp2, _ := client.Post(srv.URL+"/_auth/refresh", "application/json",
+		strings.NewReader(fmt.Sprintf(`{"refreshToken":"%s"}`, refreshToken)))
+	resp2.Body.Close()
+	if resp2.StatusCode != 401 {
+		t.Errorf("expected 401 for reused refresh token, got %d", resp2.StatusCode)
+	}
+}
+
+func TestJWTLogout(t *testing.T) {
+	srv := setupJWTServer(t, `apis:
+  - entrypoint: /api/data
+    method: GET
+    script: |
+      res.json(200, {ok: true});
+`)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	accessToken, refreshToken := jwtLogin(t, srv.URL)
+
+	// Logout
+	logoutBody := fmt.Sprintf(`{"refreshToken":"%s"}`, refreshToken)
+	req, _ := http.NewRequest("POST", srv.URL+"/_auth/logout", strings.NewReader(logoutBody))
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := client.Do(req)
+	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Errorf("expected 200 on logout, got %d", resp.StatusCode)
+	}
+
+	// Access token should be blacklisted
+	req2, _ := http.NewRequest("GET", srv.URL+"/api/data", nil)
+	req2.Header.Set("Authorization", "Bearer "+accessToken)
+	resp2, _ := client.Do(req2)
+	resp2.Body.Close()
+	if resp2.StatusCode != 401 {
+		t.Errorf("expected 401 after logout, got %d", resp2.StatusCode)
+	}
+}
+
+func TestJWTHealthSkipsAuth(t *testing.T) {
+	srv := setupJWTServer(t, `apis: []`)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, _ := client.Get(srv.URL + "/health")
+	defer resp.Body.Close()
+	// Health should work without token even with JWT enabled
+	// (it's not under /_auth/ but it's also not a dynamic API, so middleware may block it)
+	// Let's check the actual behavior
+	if resp.StatusCode == 401 {
+		t.Error("health endpoint should not require JWT")
 	}
 }
 
