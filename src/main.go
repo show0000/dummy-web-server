@@ -7,8 +7,30 @@ import (
 	"net/http"
 	"os"
 
+	"dummy-web-server/src/internal/api"
 	"dummy-web-server/src/internal/config"
+	"dummy-web-server/src/internal/router"
 )
+
+func buildRouterFromConfig(cfg *config.Config) (*router.Router, error) {
+	r := router.New()
+
+	// Health check
+	r.Handle("GET", "/health", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	// Load and register dynamic APIs
+	registered, err := api.RegisterAPIs(r, cfg.Paths.APIs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register APIs: %w", err)
+	}
+	log.Printf("registered %d API endpoint(s)", len(registered))
+
+	return r, nil
+}
 
 func run(configPath string) error {
 	cfg, err := config.Load(configPath)
@@ -16,16 +38,14 @@ func run(configPath string) error {
 		return fmt.Errorf("config load failed: %w", err)
 	}
 
+	r, err := buildRouterFromConfig(cfg)
+	if err != nil {
+		return err
+	}
+
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
-	})
-
 	log.Printf("server starting on %s", addr)
-	return http.ListenAndServe(addr, mux)
+	return http.ListenAndServe(addr, r)
 }
 
 func main() {

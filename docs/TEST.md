@@ -41,7 +41,11 @@ go test ./... -v
 | `src/internal/api` | LoadValidAPIs, LoadMethodUppercase, LoadMissingEntrypoint, LoadMissingMethod, LoadInvalidMethod, LoadMissingScript, LoadEntrypointNoSlash, LoadFileNotFound, LoadInvalidYAML, AuthEnabled, ResolveScriptInline, ResolveScriptFile, ResolveScriptFileMissing, ResolveScriptInlinePriority, LoadValidation | 15 | PASS |
 | `src/internal/router` | ExactMatch, PathVariable, MultiplePathVariables, MethodMismatch, PathMismatch, SegmentCountMismatch, TrailingSlash, SamePathDifferentMethods, RootPath, ParamsFromContextEmpty | 10 | PASS |
 | `src/internal/script` | CompileValid, CompileInvalid, ExecuteResJson, ExecuteResFile, ExecuteSetHeader, ExecuteReqBody, ExecuteReqQuery, ExecuteReqParams, ExecuteReqHeaders, ExecuteConditionalLogic, ExecuteNoResponse, ExecuteRuntimeError, SandboxingRequireBlocked, ResponseWriteHTTPJson, ResponseWriteHTTPFileHeaders | 15 | PASS |
+| `src/internal/validation` | ValidateValid, ValidateMissingRequired, ValidateWrongType, ValidateArray, ValidateEmptySchema | 5 | PASS |
+| `src` (통합) | RunFailsWithMissingConfig, RunFailsWithInvalidConfig, HealthEndpoint, DynamicAPIJsonResponse, DynamicAPIWithQueryParams, DynamicAPIWithRequestBody, DynamicAPIWithValidation, DynamicAPIWithSetHeader, DynamicAPIConditionalResponse, DynamicAPIExternalScript, NotFoundRoute | 11 | PASS |
+
+> `src` (통합) 테스트는 `httptest.NewServer`로 실제 TCP 서버를 기동하여 HTTP 클라이언트로 요청/응답을 검증.
 
 ---
 
-**총 테스트: 53건 / 전체 PASS**
+**총 테스트: 66건 / 전체 PASS**

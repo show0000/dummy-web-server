@@ -19,8 +19,8 @@
   - [x] `res` 헬퍼 구현 (json, file, setHeader)
   - [x] 스크립트 사전 컴파일 (Fail-Fast)
   - [x] Sandboxing (시스템 리소스 접근 차단)
-- [ ] 외부 스크립트 파일 로드 (`scriptFile`)
-- [ ] Request Body JSON Schema 검증 (`validation`)
+- [x] 외부 스크립트 파일 로드 (`scriptFile`)
+- [x] Request Body JSON Schema 검증 (`validation`)
 
 ## Phase 3: 파일 처리
 

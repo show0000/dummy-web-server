@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-04-14 — 요청 파이프라인 완성 (validation + handler + 통합)
+
+- `src/internal/validation/validator.go`: JSON Schema 검증기 구현 (santhosh-tekuri/jsonschema 활용).
+- `src/internal/api/handler.go`: 전체 요청 파이프라인 연결.
+  - Body 파싱 → JSON Schema 검증 → req/res 컨텍스트 구성 → 스크립트 실행 → 응답.
+  - `RegisterAPIs()`: apis.yaml 로드 → 스크립트 사전 컴파일 → 라우터 등록 (Fail-Fast).
+  - 파일 응답 시 `http.ServeFile` 사용, 커스텀 헤더 지원.
+- `src/main.go`: `buildRouterFromConfig()` 분리. /health + 동적 API 라우트 등록.
+- 통합 테스트를 실제 TCP 서버(`httptest.NewServer`) 방식으로 전환.
+  - JSON 응답, query params, request body, validation 성공/실패, setHeader, 조건분기, 외부 스크립트, 404.
+- 단위 테스트 5건(validation), 통합 테스트 66건 전체 통과.
+
+---
+
 ## 2026-04-14 — Goja 스크립트 엔진 통합
 
 - `src/internal/script/context.go`: Request(읽기전용), Response, ResHelper 구조체.
