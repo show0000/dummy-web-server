@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-04-14 — apis.yaml 파서 구현
+
+- `src/internal/api/loader.go`: APIDefinition, Validation 구조체 정의.
+- `LoadAPIs(path)`: YAML 파싱 + 검증 (entrypoint 필수/슬래시, method 필수/유효값, script/scriptFile 택1).
+- `AuthEnabled()`: auth 필드 nil이면 기본 true.
+- `ResolveScript(basePath)`: 인라인 우선, scriptFile은 basePath 기준 상대경로 해석.
+- method 소문자 입력 시 자동 대문자 변환.
+- 단위 테스트 15건, 통합 테스트 28건 전체 통과.
+
+---
+
 ## 2026-04-14 — 디렉토리 구조 정리
 
 - 소스 파일 → `./src/` (main.go, internal/, explorer/)

@@ -12,7 +12,7 @@
 
 ## Phase 2: 핵심 기능 — Dynamic Routing + Scripting
 
-- [ ] `apis.yaml` 파서 구현 (YAML → 라우트 등록)
+- [x] `apis.yaml` 파서 구현 (YAML → 라우트 등록)
 - [ ] HTTP 라우터 구현 (path variable `{name}` 지원)
 - [ ] Goja 스크립트 엔진 통합
   - [ ] `req` 컨텍스트 주입 (body, query, params, headers)
