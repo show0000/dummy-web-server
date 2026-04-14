@@ -1,0 +1,27 @@
+{
+  "company": {
+    "name": "Acme Corp",
+    "founded": 1995,
+    "departments": [
+      {
+        "name": "Engineering",
+        "headCount": 120,
+        "teams": [
+          { "name": "Backend", "lead": "Alice" },
+          { "name": "Frontend", "lead": "Bob" },
+          { "name": "DevOps", "lead": "Carol" }
+        ]
+      },
+      {
+        "name": "Sales",
+        "headCount": 45,
+        "teams": [
+          { "name": "Enterprise", "lead": "Dave" },
+          { "name": "SMB", "lead": "Eve" }
+        ]
+      }
+    ]
+  },
+  "revenue": 12500000.50,
+  "public": false
+}

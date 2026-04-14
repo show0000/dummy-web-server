@@ -1,0 +1,26 @@
+{
+  "orderId": "ORD-12345",
+  "customerId": 1001,
+  "items": [
+    {
+      "productId": "P-001",
+      "name": "Laptop",
+      "quantity": 1,
+      "price": 1500000
+    },
+    {
+      "productId": "P-002",
+      "name": "Mouse",
+      "quantity": 2,
+      "price": 25000
+    }
+  ],
+  "shipping": {
+    "address": "서울시 강남구",
+    "zipCode": "06000",
+    "method": "express"
+  },
+  "totalPrice": 1550000,
+  "paid": true,
+  "createdAt": "2026-04-14T10:30:00Z"
+}

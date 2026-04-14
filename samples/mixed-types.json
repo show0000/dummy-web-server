@@ -1,0 +1,21 @@
+{
+  "stringField": "hello",
+  "integerField": 100,
+  "floatField": 3.14,
+  "booleanField": true,
+  "nullField": null,
+  "arrayOfStrings": ["a", "b", "c"],
+  "arrayOfNumbers": [1, 2, 3],
+  "arrayOfObjects": [
+    { "id": 1, "label": "first" },
+    { "id": 2, "label": "second" }
+  ],
+  "emptyArray": [],
+  "nestedObject": {
+    "level1": {
+      "level2": {
+        "level3": "deep value"
+      }
+    }
+  }
+}

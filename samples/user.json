@@ -1,0 +1,13 @@
+{
+  "id": 42,
+  "name": "Bob",
+  "email": "bob@example.com",
+  "age": 28,
+  "verified": true,
+  "tags": ["developer", "go", "backend"],
+  "profile": {
+    "bio": "Software engineer",
+    "website": "https://example.com",
+    "followers": 150
+  }
+}
