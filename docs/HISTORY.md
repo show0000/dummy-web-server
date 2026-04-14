@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-04-14 — Phase 7: 마무리 (로깅, 빌드 검증)
+
+- `router/logger.go`: LoggerMiddleware 구현 (method, path, status, latency).
+  - statusWriter로 응답 status code 캡처.
+  - main.go에서 최외곽 미들웨어로 적용 (JWT 미들웨어 위).
+- 에러 핸들링: 이미 api/handler.go의 writeError로 표준화된 JSON 에러 응답 적용 완료.
+- 크로스 컴파일 검증: linux/amd64, darwin/arm64, windows/amd64 모두 성공.
+- 단위 테스트 2건, 전체 98건 통과.
+
+---
+
 ## 2026-04-14 — Phase 6: API Explorer (Built-in Web UI)
 
 - `explorer/embed.go`: `go:embed static/*`로 HTML/CSS/JS 바이너리 내장.

@@ -65,10 +65,10 @@ func buildRouterFromConfig(cfg *config.Config) (http.Handler, error) {
 		skipAuth := buildSkipAuthFunc(registered)
 
 		middleware := auth.Middleware(jwtSvc, skipAuth)
-		return middleware(r), nil
+		return router.LoggerMiddleware(middleware(r)), nil
 	}
 
-	return r, nil
+	return router.LoggerMiddleware(r), nil
 }
 
 func buildSkipAuthFunc(registered []api.RegisteredAPI) func(method, path string) bool {

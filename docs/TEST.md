@@ -52,6 +52,13 @@ go test ./... -v
 |--------|--------|------|------|
 | `src` (통합) | FileUpload (multipart 업로드 → 저장 → req.files 검증), FileDownload (실제 파일 → http.ServeFile → 콘텐츠 검증) | 2 | PASS |
 
+### Phase 7: 마무리
+
+| 패키지 | 테스트 | 건수 | 결과 |
+|--------|--------|------|------|
+| `src/internal/router` | LoggerMiddlewarePassesThrough, StatusWriterDefaultStatus | 2 | PASS |
+| 크로스 컴파일 | linux/amd64, darwin/arm64, windows/amd64 | 3 | OK |
+
 ### Phase 6: API Explorer
 
 | 패키지 | 테스트 | 건수 | 결과 |
@@ -74,4 +81,4 @@ go test ./... -v
 
 ---
 
-**총 테스트: 96건 / 전체 PASS**
+**총 테스트: 98건 / 전체 PASS**
