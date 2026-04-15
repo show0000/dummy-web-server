@@ -113,7 +113,30 @@ apis:
 |--------|------|
 | `res.json(status, body)` | JSON 응답 전송 |
 | `res.file(path)` | 파일 다운로드 응답 (MIME 자동 추론) |
+| `res.multipart(status, parts)` | multipart/mixed 응답 (JSON + 파일 + 텍스트 혼합) |
 | `res.setHeader(key, value)` | 응답 헤더 설정 (`res.json`/`res.file` 전에 호출) |
+
+**`res.multipart(status, parts)`** — 한 응답에 JSON·파일·텍스트를 동시에 담을 때 사용. `parts`는 배열이며 각 원소는 아래 중 하나의 키를 가진다:
+
+| 키 | 타입 | 설명 |
+|----|------|------|
+| `json` | any | JSON 직렬화되어 `application/json` part로 전송 |
+| `file` | string | 파일 경로. MIME을 확장자로 추론해 바이너리 part로 전송 |
+| `text` | string | `text/plain; charset=utf-8` part로 전송 |
+
+선택 필드: `name`(form field 이름), `filename`, `contentType`(override), `headers`(추가 헤더 맵).
+
+```yaml
+  # 파일 + 메타데이터 동시 응답
+  - entrypoint: /api/mix
+    method: GET
+    script: |
+      res.multipart(200, [
+        { json: { title: "report", tags: ["a","b"] }, name: "meta" },
+        { file: "./storage/report.pdf", name: "attachment", filename: "report.pdf" },
+        { text: "extra notes", name: "note" }
+      ]);
+```
 
 ### 예시
 

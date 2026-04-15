@@ -28,11 +28,13 @@ type Request struct {
 
 // Response collects the script's response intent.
 type Response struct {
-	StatusCode int
-	Headers    map[string]string
-	Body       interface{}
-	FilePath   string
-	Responded  bool
+	StatusCode     int
+	Headers        map[string]string
+	Body           interface{}
+	FilePath       string
+	IsMultipart    bool
+	MultipartParts []interface{}
+	Responded      bool
 }
 
 func NewResponse() *Response {
@@ -66,6 +68,17 @@ func (h *ResHelper) File(path string) interface{} {
 
 func (h *ResHelper) SetHeader(key, value string) {
 	h.resp.Headers[key] = value
+}
+
+// Multipart sets the response to be a multipart/mixed response.
+// parts is an array of objects, each with one of: json, file, text.
+// Optional per-part fields: name, filename, contentType, headers.
+func (h *ResHelper) Multipart(status int, parts []interface{}) interface{} {
+	h.resp.StatusCode = status
+	h.resp.IsMultipart = true
+	h.resp.MultipartParts = parts
+	h.resp.Responded = true
+	return nil
 }
 
 // WriteHTTP writes the Response to an http.ResponseWriter.

@@ -54,6 +54,7 @@ func Execute(compiled *CompiledScript, req *Request) (*Response, error) {
 	vm.Set("res", map[string]interface{}{
 		"json":      helper.Json,
 		"file":      helper.File,
+		"multipart": helper.Multipart,
 		"setHeader": helper.SetHeader,
 	})
 

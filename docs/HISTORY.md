@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-04-16 — `res.multipart`: multipart/mixed 응답 지원
+
+- **배경:** 한 응답에 JSON 메타데이터 + 파일을 동시에 돌려줘야 하는 Mock 시나리오. 기존엔 `res.json` / `res.file` 중 하나만 선택 가능.
+- `script/context.go`: `Response`에 `IsMultipart`, `MultipartParts` 필드 추가. `ResHelper.Multipart(status, parts)` 메서드.
+- `script/engine.go`: `res.multipart` 바인딩 추가.
+- `api/handler.go`: `writeMultipartResponse`로 `multipart/mixed; boundary=...` 직렬화. 각 part는 `json` / `file` / `text` 중 하나와 선택적 `name`, `filename`, `contentType`, `headers`를 가진다.
+- 통합 테스트 `TestMultipartResponse` 추가 — 3 part(JSON/텍스트/파일) 구성이 multipart.Reader로 올바르게 파싱되는지 검증. 전체 테스트 통과.
+
+---
+
 ## 2026-04-14 — Phase 7: 마무리 (로깅, 빌드 검증)
 
 - `router/logger.go`: LoggerMiddleware 구현 (method, path, status, latency).

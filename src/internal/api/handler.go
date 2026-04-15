@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"os"
 	"path/filepath"
 	"strings"
@@ -153,6 +155,16 @@ func makeHandler(reg RegisteredAPI, storagePath string) http.HandlerFunc {
 		}
 
 		// Write response
+		if resp.IsMultipart {
+			for k, v := range resp.Headers {
+				w.Header().Set(k, v)
+			}
+			if err := writeMultipartResponse(w, resp.StatusCode, resp.MultipartParts); err != nil {
+				writeError(w, http.StatusInternalServerError, fmt.Sprintf("failed to write multipart response: %v", err))
+			}
+			return
+		}
+
 		if resp.FilePath != "" {
 			for k, v := range resp.Headers {
 				w.Header().Set(k, v)
@@ -197,6 +209,137 @@ func saveUploadedFile(fh *multipart.FileHeader, storagePath string) (string, err
 	}
 
 	return destPath, nil
+}
+
+// writeMultipartResponse serializes parts as multipart/mixed.
+// Each part must be a map with one of: "json", "file", "text".
+// Optional: "name" (form field name), "filename", "contentType", "headers" (map).
+func writeMultipartResponse(w http.ResponseWriter, status int, parts []interface{}) error {
+	if status == 0 {
+		status = http.StatusOK
+	}
+
+	mw := multipart.NewWriter(w)
+	w.Header().Set("Content-Type", "multipart/mixed; boundary="+mw.Boundary())
+	w.WriteHeader(status)
+	realWriter := mw
+
+	for i, p := range parts {
+		part, ok := p.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("part %d: expected object, got %T", i, p)
+		}
+
+		hdr := textproto.MIMEHeader{}
+
+		// Custom headers from the part
+		if hMap, ok := part["headers"].(map[string]interface{}); ok {
+			for k, v := range hMap {
+				if s, ok := v.(string); ok {
+					hdr.Set(k, s)
+				}
+			}
+		}
+
+		// Content-Disposition
+		name, _ := part["name"].(string)
+		filename, _ := part["filename"].(string)
+		if name != "" || filename != "" {
+			disp := "form-data"
+			if name != "" {
+				disp += fmt.Sprintf(`; name="%s"`, name)
+			}
+			if filename != "" {
+				disp += fmt.Sprintf(`; filename="%s"`, filename)
+			}
+			hdr.Set("Content-Disposition", disp)
+		}
+
+		// Optional explicit Content-Type override
+		explicitCT, _ := part["contentType"].(string)
+
+		switch {
+		case part["json"] != nil:
+			if explicitCT == "" {
+				hdr.Set("Content-Type", "application/json")
+			} else {
+				hdr.Set("Content-Type", explicitCT)
+			}
+			pw, err := realWriter.CreatePart(hdr)
+			if err != nil {
+				return fmt.Errorf("part %d: %w", i, err)
+			}
+			data, err := json.Marshal(part["json"])
+			if err != nil {
+				return fmt.Errorf("part %d json marshal: %w", i, err)
+			}
+			if _, err := pw.Write(data); err != nil {
+				return fmt.Errorf("part %d write: %w", i, err)
+			}
+
+		case part["text"] != nil:
+			text, ok := part["text"].(string)
+			if !ok {
+				return fmt.Errorf("part %d: text must be a string", i)
+			}
+			if explicitCT == "" {
+				hdr.Set("Content-Type", "text/plain; charset=utf-8")
+			} else {
+				hdr.Set("Content-Type", explicitCT)
+			}
+			pw, err := realWriter.CreatePart(hdr)
+			if err != nil {
+				return fmt.Errorf("part %d: %w", i, err)
+			}
+			if _, err := pw.Write([]byte(text)); err != nil {
+				return fmt.Errorf("part %d write: %w", i, err)
+			}
+
+		case part["file"] != nil:
+			filePath, ok := part["file"].(string)
+			if !ok {
+				return fmt.Errorf("part %d: file must be a string path", i)
+			}
+			if filename == "" {
+				filename = filepath.Base(filePath)
+				hdr.Set("Content-Disposition", func() string {
+					disp := "form-data"
+					if name != "" {
+						disp += fmt.Sprintf(`; name="%s"`, name)
+					}
+					disp += fmt.Sprintf(`; filename="%s"`, filename)
+					return disp
+				}())
+			}
+			if explicitCT == "" {
+				ct := mime.TypeByExtension(strings.ToLower(filepath.Ext(filePath)))
+				if ct == "" {
+					ct = "application/octet-stream"
+				}
+				hdr.Set("Content-Type", ct)
+			} else {
+				hdr.Set("Content-Type", explicitCT)
+			}
+			pw, err := realWriter.CreatePart(hdr)
+			if err != nil {
+				return fmt.Errorf("part %d: %w", i, err)
+			}
+			f, err := os.Open(filePath)
+			if err != nil {
+				return fmt.Errorf("part %d open file: %w", i, err)
+			}
+			_, copyErr := io.Copy(pw, f)
+			f.Close()
+			if copyErr != nil {
+				return fmt.Errorf("part %d copy file: %w", i, copyErr)
+			}
+
+		default:
+			return fmt.Errorf("part %d: must have one of json, file, text", i)
+		}
+	}
+
+	return realWriter.Close()
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {

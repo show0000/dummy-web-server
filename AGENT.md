@@ -102,6 +102,7 @@ HTTP 요청
   → validation.schema 있으면 → JSON Schema 검증
   → req 객체 구성 (body, query, params, headers, files)
   → Goja VM에서 script 실행
+  → resp.IsMultipart → writeMultipartResponse (multipart/mixed)
   → resp.FilePath 있으면 → http.ServeFile
   → 아니면 → resp.WriteHTTP (JSON 응답)
 ```

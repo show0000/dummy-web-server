@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -768,5 +769,99 @@ func TestNotFoundRoute(t *testing.T) {
 	defer resp.Body.Close()
 	if resp.StatusCode != 404 {
 		t.Errorf("expected 404, got %d", resp.StatusCode)
+	}
+}
+
+func TestMultipartResponse(t *testing.T) {
+	// Prepare a storage file the script will attach.
+	dir := t.TempDir()
+	storageDir := filepath.Join(dir, "storage")
+	_ = os.MkdirAll(storageDir, 0755)
+	filePath := filepath.Join(storageDir, "hello.txt")
+	if err := os.WriteFile(filePath, []byte("hello-file-contents"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	writeFile(t, dir, "config.yaml", `server:
+  port: 8080
+paths:
+  storage: `+storageDir+`
+  apis: `+filepath.Join(dir, "apis.yaml"))
+
+	apisYAML := `apis:
+  - entrypoint: /api/mix
+    method: GET
+    script: |
+      res.multipart(200, [
+        { json: {title: "foo", tags: ["a","b"]}, name: "meta" },
+        { text: "plain text part", name: "note" },
+        { file: ` + fmt.Sprintf("%q", filePath) + `, name: "attachment", filename: "hello.txt" }
+      ]);
+`
+	writeFile(t, dir, "apis.yaml", apisYAML)
+
+	cfgPath := filepath.Join(dir, "config.yaml")
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+	r, err := buildRouterFromConfig(cfg)
+	if err != nil {
+		t.Fatalf("build router: %v", err)
+	}
+	srv := httptest.NewServer(r)
+	defer srv.Close()
+
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get(srv.URL + "/api/mix")
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	ct := resp.Header.Get("Content-Type")
+	if !strings.HasPrefix(ct, "multipart/mixed;") {
+		t.Fatalf("expected multipart/mixed, got %s", ct)
+	}
+
+	_, params, err := mime.ParseMediaType(ct)
+	if err != nil {
+		t.Fatalf("parse content-type: %v", err)
+	}
+	boundary := params["boundary"]
+	if boundary == "" {
+		t.Fatal("empty boundary")
+	}
+
+	mr := multipart.NewReader(resp.Body, boundary)
+	var got []string
+	for {
+		p, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatalf("next part: %v", err)
+		}
+		body, _ := io.ReadAll(p)
+		got = append(got, p.FormName()+":"+p.Header.Get("Content-Type")+":"+string(body))
+	}
+
+	if len(got) != 3 {
+		t.Fatalf("expected 3 parts, got %d: %v", len(got), got)
+	}
+	if !strings.Contains(got[0], `meta:application/json:{"tags":["a","b"],"title":"foo"}`) &&
+		!strings.Contains(got[0], `meta:application/json:{"title":"foo","tags":["a","b"]}`) {
+		t.Errorf("part[0] wrong: %s", got[0])
+	}
+	if !strings.HasPrefix(got[1], "note:text/plain") || !strings.HasSuffix(got[1], ":plain text part") {
+		t.Errorf("part[1] wrong: %s", got[1])
+	}
+	if !strings.HasSuffix(got[2], ":hello-file-contents") {
+		t.Errorf("part[2] wrong: %s", got[2])
 	}
 }
