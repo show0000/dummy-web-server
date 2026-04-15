@@ -290,6 +290,65 @@ apis:
       }
 
   # ============================================================
+  # multipart/mixed 응답 (JSON + 파일 + 텍스트 동시 반환)
+  # ============================================================
+
+  # 리포트 번들: 메타데이터(JSON) + 첨부 파일 + 설명(text)
+  - entrypoint: /api/reports/{id}/bundle
+    method: GET
+    description: 리포트 메타데이터와 파일을 한 응답에 동시 반환
+    auth: false
+    script: |
+      var id = req.params.id;
+      res.multipart(200, [
+        {
+          name: "meta",
+          json: {
+            reportId: id,
+            title: "Report " + id,
+            tags: ["q1", "summary"],
+            generatedAt: new Date().toISOString()
+          }
+        },
+        {
+          name: "note",
+          text: "이 리포트는 Mock 서버가 생성한 샘플입니다."
+        },
+        {
+          name: "attachment",
+          file: "./storage/asset.fbx",
+          filename: "report-" + id + ".fbx"
+        }
+      ]);
+
+  # 업로드한 파일을 그대로 돌려주면서 분석 결과(JSON)도 함께 전달
+  - entrypoint: /api/files/analyze
+    method: POST
+    description: 업로드 파일 + 분석 결과(JSON)를 multipart로 반환
+    script: |
+      if (req.files.length === 0) {
+        res.json(400, { error: "파일이 없습니다" });
+      } else {
+        var f = req.files[0];
+        res.multipart(200, [
+          {
+            name: "analysis",
+            json: {
+              fileName: f.fileName,
+              size: f.size,
+              checksum: "mock-" + f.size,
+              status: "ok"
+            }
+          },
+          {
+            name: "original",
+            file: f.savedPath,
+            filename: f.fileName
+          }
+        ]);
+      }
+
+  # ============================================================
   # 중첩 리소스 (Nested Resources)
   # ============================================================
 
